@@ -1,13 +1,19 @@
 """Mixins for the ATLAS PHYSLITE schema - work in progress."""
 
+from datetime import datetime
 from numbers import Number
 
 import awkward
 import dask_awkward
 import numpy
+import pytz
 from dask_awkward import dask_property
 
 from coffea.nanoevents.methods import base, vector
+from coffea.util import deprecate
+
+_cst = pytz.timezone("US/Central")
+_depttime = _cst.localize(datetime(2025, 1, 30, 11, 59, 59))
 
 behavior = {}
 behavior.update(base.behavior)
@@ -248,16 +254,40 @@ class Electron(Particle):
         return trackParticles[slicer]
 
     @dask_property
-    def caloClusters(self):
+    def egammaClusters(self):
+        return _element_link_method(self, "egammaClustersLinks", "egammaClusters", None)
+
+    @egammaClusters.dask
+    def egammaClusters(self, dask_array):
         return _element_link_method(
-            self, "caloClusterLinks", "CaloCalTopoClusters", None
+            self, "egammaClustersLinks", "egammaClusters", dask_array
         )
+
+    # alias deprecated caloClusters to egammaClusters
+    # TODO: Remove in coffea 2025.1.0
+    @dask_property
+    def caloClusters(self):
+        deprecate(
+            (
+                "coffea.nanoevents.methods.physlite.Electron.caloClusters is deprecated and will be removed."
+                "Please use coffea.nanoevents.methods.physlite.Electron.egammaClusters instead."
+            ),
+            version="2025.1.0",
+            date=str(_depttime),
+        )
+        return self.egammaClusters()
 
     @caloClusters.dask
     def caloClusters(self, dask_array):
-        return _element_link_method(
-            self, "caloClusterLinks", "CaloCalTopoClusters", dask_array
+        deprecate(
+            (
+                "coffea.nanoevents.methods.physlite.Electron.caloClusters is deprecated and will be removed."
+                "Please use coffea.nanoevents.methods.physlite.Electron.egammaClusters instead."
+            ),
+            version="2025.1.0",
+            date=str(_depttime),
         )
+        return self.egammaClusters(dask_array)
 
 
 _set_repr_name("Electron")
