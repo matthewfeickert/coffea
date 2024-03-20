@@ -7,6 +7,7 @@ import awkward
 import dask_awkward
 import numpy
 import pytz
+from awkward.errors import FieldNotFoundError
 from dask_awkward import dask_property
 
 from coffea.nanoevents.methods import base, vector
@@ -217,6 +218,13 @@ class Muon(Particle):
 _set_repr_name("Muon")
 
 
+# @awkward.mixin_class(behavior)
+# class EgammaClusters(base.NanoCollection): ...
+
+
+# _set_repr_name("egammaClusters")
+
+
 @awkward.mixin_class(behavior)
 class Electron(Particle):
     """Electron collection, following `xAOD::Electron_v1
@@ -275,7 +283,13 @@ class Electron(Particle):
             version="2025.1.0",
             date=str(_depttime),
         )
-        return self.egammaClusters()
+        try:
+            _return = self.egammaClusters()
+        except FieldNotFoundError:
+            _return = _element_link_method(
+                self, "caloClusterLinks", "egammaClusters", None
+            )
+        return _return
 
     @caloClusters.dask
     def caloClusters(self, dask_array):
@@ -287,7 +301,13 @@ class Electron(Particle):
             version="2025.1.0",
             date=str(_depttime),
         )
-        return self.egammaClusters(dask_array)
+        try:
+            _return = self.egammaClusters(dask_array)
+        except FieldNotFoundError:
+            _return = _element_link_method(
+                self, "egammaClustersLinks", "egammaClusters", dask_array
+            )
+        return _return
 
 
 _set_repr_name("Electron")
