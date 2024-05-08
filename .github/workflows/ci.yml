@@ -2,12 +2,12 @@ name: CI/CD
 
 on:
   push:
-    branches:
-      - master
-      - backports-v0.7.x
-      - backports-v0.6.x
-    tags:
-      - v*.*.*
+    # branches:
+    #   - master
+    #   - backports-v0.7.x
+    #   - backports-v0.6.x
+    # tags:
+    #   - v*.*.*
   pull_request:
     branches:
       - master
@@ -100,6 +100,11 @@ jobs:
         uv pip install --system -q '.[dev,dask]' --upgrade
         uv pip list --system
         java -version
+
+    - name: Test https://github.com/scikit-hep/uproot5/pull/1209
+      run: |
+        uv pip install --system --upgrade git+https://github.com/scikit-hep/uproot5@jpivarski/fixing_ignore_duplicates
+        uv pip show awkward
 
     - name: Start triton server with example model
       if: matrix.os == 'ubuntu-latest'
